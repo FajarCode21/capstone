@@ -51,7 +51,7 @@ export const insertSppByAdmin = async (req, res, next) => {
         const result = await sppModel.insertSpp(
             id_spp,
             nominal,
-            "Pembayran dari Admin"
+            "Pembayaran dari Admin"
         );
 
         return res.status(200).json({

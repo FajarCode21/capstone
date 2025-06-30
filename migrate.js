@@ -80,17 +80,11 @@ export const createTables = async () => {
         tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- TABEL JENIS/JUDUL BEASISWA
-        CREATE TABLE IF NOT EXISTS beasiswa_components (
-        id_beasiswa_component SERIAL PRIMARY KEY,
-        keterangan VARCHAR(100)
-        );
-
         -- TABEL DATA BEASISWA YANG DIBERIKAN KE SISWA
         CREATE TABLE IF NOT EXISTS beasiswa (
         id_beasiswa SERIAL PRIMARY KEY,
         id_siswa INT REFERENCES siswa(id_siswa),
-        id_beasiswa_component INT REFERENCES beasiswa_components(id_beasiswa_component),
+        keterangan VARCHAR(100),
         nominal INT NOT NULL,
         tanggal TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -137,6 +131,7 @@ export const syncTables = async () => {
             `);
         console.log("Tables synced successfully.");
     } catch (err) {
+        console.log("Error syncing tables:");
         console.log(err.stack);
     }
 };

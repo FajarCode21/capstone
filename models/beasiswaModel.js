@@ -1,14 +1,10 @@
 import db from "../db/index.js";
-export const insertBeasiswa = async (
-    id_siswa,
-    id_beasiswa_component,
-    nominal
-) => {
+export const insertBeasiswa = async (id_siswa, keterangan, nominal) => {
     const result = await db.query(
         `
-        insert into beasiswa (id_siswa, id_beasiswa_component, nominal) values ($1, $2, $3) returning *
+        insert into beasiswa (id_siswa, keterangan, nominal) values ($1, $2, $3) returning *
         `,
-        [id_siswa, id_beasiswa_component, nominal]
+        [id_siswa, keterangan, nominal]
     );
 
     return result.rows[0];
@@ -17,13 +13,12 @@ export const insertBeasiswa = async (
 export const getAllBeasiswaUsers = async (input, filter, offset, limit) => {
     const result = await db.query(
         `
-        select b.id_beasiswa,s.id_siswa, s.nisn, s.nama_lengkap, s.kelas, bc.keterangan, b.nominal, count(*) over () as total
+        select b.id_beasiswa,s.id_siswa, s.nisn, s.nama_lengkap, s.kelas, b.keterangan, b.nominal, count(*) over () as total
         from siswa s
         join beasiswa b using (id_siswa)
-        join beasiswa_components bc using (id_beasiswa_component)
         where
         ($1 = '' or s.nisn ilike  $1 || '%' or s.nama_lengkap ilike '%' || $1 || '%' or s.kelas ilike '%' || $1 || '%') AND
-        ($2 = '' or bc.id_beasiswa_component = $2::int)
+        ($2 = '' or b.keterangan ilike '%' || $2 || '%')
         limit ${limit} offset ${offset}
         `,
         [input, filter]
@@ -35,17 +30,13 @@ export const getAllBeasiswaUsers = async (input, filter, offset, limit) => {
     return { data, totalData };
 };
 
-export const updateBeasiswa = async (
-    id_beasiswa,
-    nominal,
-    id_beasiswa_component
-) => {
+export const updateBeasiswa = async (id_beasiswa, nominal, keterangan) => {
     const result = await db.query(
         `
-        update beasiswa set nominal = $2, id_beasiswa_component = $3
+        update beasiswa set nominal = $2, keterangan = $3
         where id_beasiswa = $1 returning *;
         `,
-        [id_beasiswa, nominal, id_beasiswa_component]
+        [id_beasiswa, nominal, keterangan]
     );
 
     return result.rows[0];

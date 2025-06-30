@@ -2,10 +2,10 @@ import { beasiswaModel } from "../models/index.js";
 
 export const insertBeasiswa = async (req, res, next) => {
     try {
-        const { id_siswa, id_beasiswa_component, nominal } = req.body;
+        const { id_siswa, keterangan, nominal } = req.body;
         if (
             !id_siswa ||
-            !id_beasiswa_component ||
+            !keterangan ||
             !nominal ||
             isNaN(nominal) ||
             nominal <= 0
@@ -17,7 +17,7 @@ export const insertBeasiswa = async (req, res, next) => {
 
         const result = await beasiswaModel.insertBeasiswa(
             id_siswa,
-            id_beasiswa_component,
+            keterangan,
             nominal
         );
 
@@ -69,12 +69,11 @@ export const getAllBeasiswaUsers = async (req, res, next) => {
 
 export const updateBeasiswa = async (req, res, next) => {
     try {
-        const { id_siswa, id_beasiswa, nominal, id_beasiswa_component } =
-            req.body;
+        const { id_siswa, id_beasiswa, nominal, keterangan } = req.body;
         if (
             !id_beasiswa ||
             !nominal ||
-            !id_beasiswa_component ||
+            !keterangan ||
             isNaN(nominal) ||
             nominal <= 0
         ) {
@@ -96,7 +95,7 @@ export const updateBeasiswa = async (req, res, next) => {
 
         const result = await beasiswaModel.insertBeasiswa(
             id_siswa,
-            id_beasiswa_component,
+            keterangan,
             nominal
         );
 
