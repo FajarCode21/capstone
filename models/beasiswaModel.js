@@ -59,7 +59,7 @@ export const deleteBeasiswa = async (id_beasiswa) => {
         [id_beasiswa]
     );
 
-    return result.rows[0];
+    return result.rowCount > 0;
 };
 
 export const searchSiswa = async (input) => {
@@ -144,4 +144,16 @@ export const insertTabunganBeasiswa = async (
     );
 
     return result.rows[0];
+};
+
+export const cekID = async (id_beasiswa, id_siswa) => {
+    const result = await db.query(
+        `
+        select * from beasiswa
+        where id_beasiswa = $1 and id_siswa = $2;
+        `,
+        [id_beasiswa, id_siswa]
+    );
+
+    return result.rows;
 };

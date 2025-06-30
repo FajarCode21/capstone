@@ -123,6 +123,15 @@ export const updateBeasiswa = async (req, res, next) => {
                 .json({ message: "Data Tidak Lengkap", status: "failed" });
         }
 
+        const cekID = await beasiswaModel.cekID(id_beasiswa, id_siswa);
+
+        if (cekID.length === 0) {
+            return res.status(400).json({
+                message: "Beasiswa Tidak Ditemukan",
+                status: "failed",
+            });
+        }
+
         await beasiswaModel.deleteBeasiswa(id_beasiswa);
 
         const result = await beasiswaModel.insertBeasiswa(
