@@ -1,45 +1,5 @@
 import { beasiswaModel } from "../models/index.js";
 
-const bayarSppDariBeasiswa = async (id_siswa, id_beasiswa, totalBeasiswa) => {
-    const biayaSemester = await beasiswaModel.getBiayaSemester(id_siswa);
-    const totalPembayaran = await beasiswaModel.getTotalPembayaran(id_siswa);
-
-    let sisaBeasiswa = parseInt(totalBeasiswa || 0);
-
-    for (const biaya of biayaSemester) {
-        const bayar = totalPembayaran.find((p) => p.id_spp === biaya.id_spp);
-        const totalBayar = parseInt(bayar?.total_pembayaran || 0);
-        const totalTagihan = parseInt(biaya.total_biaya || 0);
-
-        const tunggakan = totalTagihan - totalBayar;
-
-        if (tunggakan > 0 && sisaBeasiswa > 0) {
-            const dibayar = Math.min(tunggakan, sisaBeasiswa);
-
-            await beasiswaModel.insertSPPBeasiswa(
-                biaya.id_spp,
-                dibayar,
-                "Pembayaran dari Beasiswa",
-                id_beasiswa
-            );
-
-            sisaBeasiswa -= dibayar;
-
-            if (sisaBeasiswa <= 0) break;
-        }
-    }
-
-    if (sisaBeasiswa > 0) {
-        await beasiswaModel.insertTabunganBeasiswa(
-            id_beasiswa,
-            id_siswa,
-            sisaBeasiswa
-        );
-    }
-
-    return true;
-};
-
 export const insertBeasiswa = async (req, res, next) => {
     try {
         const { id_siswa, id_beasiswa_component, nominal } = req.body;
@@ -61,7 +21,7 @@ export const insertBeasiswa = async (req, res, next) => {
             nominal
         );
 
-        const pembayaran = await bayarSppDariBeasiswa(
+        const pembayaran = await beasiswaModel.bayarSppDariBeasiswa(
             id_siswa,
             result.id_beasiswa,
             nominal
@@ -140,17 +100,12 @@ export const updateBeasiswa = async (req, res, next) => {
             nominal
         );
 
-        const pembayaran = await bayarSppDariBeasiswa(
-            id_siswa,
-            result.id_beasiswa,
-            nominal
-        );
+        await beasiswaModel.alokasiUlangSemuaBeasiswa(id_siswa);
 
         return res.status(200).json({
             message: "Beasiswa Berhasil Ditambahkan",
             status: "success",
             data: result,
-            pembayaran,
         });
     } catch (err) {
         next(err);
@@ -159,14 +114,23 @@ export const updateBeasiswa = async (req, res, next) => {
 
 export const deleteBeasiswa = async (req, res, next) => {
     try {
-        const { id_beasiswa } = req.params;
-        if (!id_beasiswa) {
+        const { id_beasiswa, id_siswa } = req.body;
+        if (!id_beasiswa || !id_siswa) {
             return res
                 .status(400)
                 .json({ message: "ID Beasiswa Tidak Valid", status: "failed" });
         }
 
-        await beasiswaModel.deleteBeasiswa(id_beasiswa);
+        const result = await beasiswaModel.deleteBeasiswa(id_beasiswa);
+
+        if (!result) {
+            return res.status(400).json({
+                message: "Beasiswa Tidak Ditemukan",
+                status: "failed",
+            });
+        }
+
+        await beasiswaModel.alokasiUlangSemuaBeasiswa(id_siswa);
 
         return res
             .status(200)

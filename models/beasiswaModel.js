@@ -157,3 +157,80 @@ export const cekID = async (id_beasiswa, id_siswa) => {
 
     return result.rows;
 };
+
+export const bayarSppDariBeasiswa = async (
+    id_siswa,
+    id_beasiswa,
+    totalBeasiswa
+) => {
+    const biayaSemester = await getBiayaSemester(id_siswa);
+    const totalPembayaran = await getTotalPembayaran(id_siswa);
+
+    let sisaBeasiswa = parseInt(totalBeasiswa || 0);
+
+    for (const biaya of biayaSemester) {
+        const bayar = totalPembayaran.find((p) => p.id_spp === biaya.id_spp);
+        const totalBayar = parseInt(bayar?.total_pembayaran || 0);
+        const totalTagihan = parseInt(biaya.total_biaya || 0);
+
+        const tunggakan = totalTagihan - totalBayar;
+
+        if (tunggakan > 0 && sisaBeasiswa > 0) {
+            const dibayar = Math.min(tunggakan, sisaBeasiswa);
+
+            await insertSPPBeasiswa(
+                biaya.id_spp,
+                dibayar,
+                "Pembayaran dari Beasiswa",
+                id_beasiswa
+            );
+
+            sisaBeasiswa -= dibayar;
+
+            if (sisaBeasiswa <= 0) break;
+        }
+    }
+
+    if (sisaBeasiswa > 0) {
+        await insertTabunganBeasiswa(id_beasiswa, id_siswa, sisaBeasiswa);
+    }
+
+    return true;
+};
+
+export const getBeasiswaAktifBySiswa = async (id_siswa) => {
+    const result = await db.query(
+        `
+        SELECT * FROM beasiswa
+        WHERE id_siswa = $1
+        ORDER BY tanggal ASC;
+        `,
+        [id_siswa]
+    );
+    return result.rows;
+};
+
+export const alokasiUlangSemuaBeasiswa = async (id_siswa) => {
+    const semuaBeasiswa = await getBeasiswaAktifBySiswa(id_siswa);
+
+    if (semuaBeasiswa.length === 0) return;
+
+    const beasiswaIds = semuaBeasiswa.map((b) => b.id_beasiswa);
+
+    // Hapus spp_payments
+    await db.query(
+        `DELETE FROM spp_payments WHERE id_beasiswa = ANY($1::int[])`,
+        [beasiswaIds]
+    );
+
+    // Hapus tabungan_beasiswa
+    await db.query(
+        `DELETE FROM tabungan_beasiswa WHERE id_beasiswa = ANY($1::int[])`,
+        [beasiswaIds]
+    );
+
+    // Alokasikan ulang semua beasiswa
+    for (const b of semuaBeasiswa) {
+        await bayarSppDariBeasiswa(b.id_siswa, b.id_beasiswa, b.nominal);
+    }
+};
