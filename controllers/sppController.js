@@ -131,7 +131,7 @@ export const getAllPembayaran = async (req, res, next) => {
 
 export const getSPPUser = async (req, res, next) => {
     try {
-        const { id_siswa } = req.params;
+        const id_siswa = req.user.id;
         if (!id_siswa) {
             return res
                 .status(400)

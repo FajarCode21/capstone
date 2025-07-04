@@ -107,31 +107,35 @@ export const getAllPembayaran = async (input, kelas, offset, limit) => {
     return { data, totalData };
 };
 
-export const getSPPUser = async (id_siswa) => {
+export const getSPPUser = async (id_user) => {
     const result = await db.query(
-        `select id_siswa, nisn, nama_lengkap, kelas from siswa where id_siswa = $1;`,
-        [id_siswa]
+        `select s.id_siswa, s.nisn, s.nama_lengkap, s.kelas 
+        from users
+        join siswa s using (id_user)
+        where id_user = $1;`,
+        [id_user]
     );
 
     return result.rows[0];
 };
 
-export const getSPPComponent = async (id_siswa) => {
+export const getSPPComponent = async (id_user) => {
     const result = await db.query(
         `
         select sd.id_spp, sd.keterangan, spp.semester, sd.nominal
         from spp_details sd
         JOIN spp using (id_spp)
         JOIN siswa using (id_siswa)
-        where id_siswa = $1
+        JOIN users using (id_user)
+        where id_user = $1
         `,
-        [id_siswa]
+        [id_user]
     );
 
     return result.rows;
 };
 
-export const getDetailSPPUser = async (id_siswa) => {
+export const getDetailSPPUser = async (id_user) => {
     const result = await db.query(
         `
          SELECT 
@@ -146,7 +150,8 @@ export const getDetailSPPUser = async (id_siswa) => {
             END AS status,
             COALESCE(TO_CHAR(p.tanggal_terakhir, 'YYYY-MM-DD'), '-') AS tanggal_terakhir_bayar,
             COUNT(*) OVER() AS total
-        FROM siswa s
+        FROM users
+        JOIN siswa s using (id_user)
         JOIN spp sp ON sp.id_siswa = s.id_siswa
         LEFT JOIN (
             SELECT id_spp, SUM(nominal) AS total_biaya
@@ -159,12 +164,12 @@ export const getDetailSPPUser = async (id_siswa) => {
             GROUP BY id_spp
         ) p ON p.id_spp = sp.id_spp
 
-        WHERE s.id_siswa = $1
+        WHERE users.id_user = $1
 
         order by sp.semester
         
         `,
-        [id_siswa]
+        [id_user]
     );
 
     return result.rows;

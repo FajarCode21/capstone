@@ -53,26 +53,27 @@ export const getAllEmoneyUsers = async (input, kelas, offset, limit) => {
     return { data, totalData };
 };
 
-export const getEmoneyUser = async (id_siswa) => {
+export const getEmoneyUser = async (id_user) => {
     const result = await db.query(
         `
         select s.nisn, s.nama_lengkap, s.kelas, e.nominal 
-        from siswa s 
+        from users
+        join siswa s using (id_user)
         join emoney e using (id_siswa) 
-        where id_siswa = $1;`,
-        [id_siswa]
+        where id_user = $1;`,
+        [id_user]
     );
     return result.rows[0];
 };
 
 export const getRiwayatEmoney = async (
-    id_siswa,
+    id_user,
     offset,
     limit,
     tgl_awal,
     tgl_akhir
 ) => {
-    const values = [id_siswa];
+    const values = [id_user];
     let filterTanggal = "";
     if (tgl_awal && !tgl_akhir) {
         values.push(tgl_awal);
@@ -90,11 +91,12 @@ export const getRiwayatEmoney = async (
     const result = await db.query(
         `
         select r.nominal, r.keterangan, t.nama_tipe, r.tanggal , count(*) over () as total
-        from siswa
+        from users
+        join siswa s using (id_user)
         join emoney e using (id_siswa)
         join riwayat_emoney r using (id_emoney)
         join tipe_emoney t using (id_tipe_emoney)
-        where id_siswa = $1 
+        where id_user = $1 
         ${filterTanggal}
         order by r.tanggal desc
         limit ${limit} offset ${offset};

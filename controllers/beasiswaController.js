@@ -71,6 +71,7 @@ export const updateBeasiswa = async (req, res, next) => {
     try {
         const { id_siswa, id_beasiswa, nominal, keterangan } = req.body;
         if (
+            !id_siswa ||
             !id_beasiswa ||
             !nominal ||
             !keterangan ||
@@ -91,7 +92,7 @@ export const updateBeasiswa = async (req, res, next) => {
             });
         }
 
-        await beasiswaModel.deleteBeasiswa(id_beasiswa);
+        await beasiswaModel.deleteBeasiswa(id_beasiswa, id_siswa);
 
         const result = await beasiswaModel.insertBeasiswa(
             id_siswa,
@@ -120,7 +121,10 @@ export const deleteBeasiswa = async (req, res, next) => {
                 .json({ message: "ID Beasiswa Tidak Valid", status: "failed" });
         }
 
-        const result = await beasiswaModel.deleteBeasiswa(id_beasiswa);
+        const result = await beasiswaModel.deleteBeasiswa(
+            id_beasiswa,
+            id_siswa
+        );
 
         if (!result) {
             return res.status(400).json({

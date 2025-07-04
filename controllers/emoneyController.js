@@ -103,7 +103,7 @@ export const getAllEmoneyUsers = async (req, res, next) => {
 
 export const getEmoneyUser = async (req, res, next) => {
     try {
-        const { id_siswa } = req.params;
+        const id_siswa = req.user.id;
         const {
             page = 1,
             limit = 10,
@@ -117,6 +117,11 @@ export const getEmoneyUser = async (req, res, next) => {
         }
         const offset = (page - 1) * limit;
         const result = await emoneyModel.getEmoneyUser(id_siswa);
+        if (!result) {
+            return res
+                .status(400)
+                .json({ message: "Siswa Tidak Ditemukan", status: "failed" });
+        }
         const riwayat = await emoneyModel.getRiwayatEmoney(
             id_siswa,
             offset,

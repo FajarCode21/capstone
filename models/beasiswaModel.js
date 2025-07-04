@@ -42,12 +42,12 @@ export const updateBeasiswa = async (id_beasiswa, nominal, keterangan) => {
     return result.rows[0];
 };
 
-export const deleteBeasiswa = async (id_beasiswa) => {
+export const deleteBeasiswa = async (id_beasiswa, id_siswa) => {
     const result = await db.query(
         `
-        delete from beasiswa where id_beasiswa = $1 returning *;
+        delete from beasiswa where id_beasiswa = $1 and id_siswa = $2 returning *;
         `,
-        [id_beasiswa]
+        [id_beasiswa, id_siswa]
     );
 
     return result.rowCount > 0;
