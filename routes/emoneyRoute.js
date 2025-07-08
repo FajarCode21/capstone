@@ -16,6 +16,8 @@ router.post(
     authorizeRole("admin"),
     emoneyController.reduceEmoney
 );
+router.post("/transaction-emoney", emoneyController.transactionEmoney);
+
 router.get(
     "/",
     verifyUser,

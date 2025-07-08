@@ -72,6 +72,45 @@ export const reduceEmoney = async (req, res, next) => {
     }
 };
 
+export const transactionEmoney = async (req, res, next) => {
+    try {
+        const {
+            id_emoney,
+            nominal,
+            keterangan = "Transaksi di Kantin Sekolah",
+        } = req.body;
+
+        if (!id_emoney || !nominal || isNaN(nominal) || nominal <= 0) {
+            return res
+                .status(400)
+                .json({ message: "Bad Request", status: "failed" });
+        }
+
+        const saldo = await emoneyModel.getEmoney(id_emoney);
+        if (!saldo) {
+            return res
+                .status(400)
+                .json({ message: "Data Tidak Valid", status: "failed" });
+        }
+
+        if (parseInt(saldo.nominal) < parseInt(nominal)) {
+            return res
+                .status(400)
+                .json({ message: "Saldo tidak mencukupi", status: "failed" });
+        }
+
+        const reduce = parseInt(saldo.nominal) - parseInt(nominal);
+        await emoneyModel.updateEmoney(id_emoney, reduce);
+        await emoneyModel.insertRiwayat(id_emoney, nominal, keterangan, 2);
+
+        return res
+            .status(200)
+            .json({ message: "Transaksi Berhasil", status: "success" });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const getAllEmoneyUsers = async (req, res, next) => {
     try {
         const { input = "", kelas = "", page = 1, limit = 10 } = req.query;
